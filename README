@@ -4,4 +4,11 @@ WindStalker is a project for logging wind speed from three (or more)
 anemometers using a Seeduino Stalker microprocessor and logging utilities.
 This is a follow on project from the Butterfly wind logging utility.
 
+
+Some useful links
+=================
 http://www.seeedstudio.com/wiki/index.php?title=Seeeduino_v2.21
+http://garden.seeedstudio.com/images/0/09/Seeeduino_v2.21.pdf
+http://www.arduino.cc/en/Main/ArduinoBoardDuemilanove
+http://www.atmel.com/dyn/resources/prod_documents/doc8161.pdf
+http://arduino.cc/en/uploads/Main/arduino-duemilanove-schematic.pdf
