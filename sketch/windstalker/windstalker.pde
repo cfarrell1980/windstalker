@@ -1,29 +1,11 @@
-head	1.1;
-access;
-symbols;
-locks; strict;
-comment	@# @;
-
-
-1.1
-date	2011.10.27.13.03.45;	author cfarrell;	state Exp;
-branches;
-next	;
-
-
-desc
-@@
-
-
-1.1
-log
-@Initial revision
-@
-text
-@#include <math.h>
+#include <math.h>
 #include "Wire.h"
 #define DHT22_PIN 0      // ADC0
 #define DS1307_I2C_ADDRESS 0x68
+
+volatile long counter_0 = 0;
+volatile long counter_1 = 0;
+volatile long counter_2 = 0;
 
 // Convert normal decimal numbers to binary coded decimal
 byte decToBcd(byte val)
@@ -115,6 +97,8 @@ void getDateDs1307(byte *second,
 
 void setup()
 {
+  pinMode(PD2,INPUT);
+  attachInterrupt(0,count0,RISING);
   byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
   Wire.begin();
   DDRC |= _BV(DHT22_PIN);
@@ -122,24 +106,20 @@ void setup()
   Serial.begin(9600);
   delay(2000); // Recommended delay before sensor can be used
   Serial.println("Ready");
-  pinMode(A5,OUTPUT);
-  digitalWrite(A5,LOW);
-  pinMode(A4,OUTPUT);
-  digitalWrite(A4,LOW);
   // Set the clock
-  second = 45;
-  minute = 55;
-  hour = 10;
-  dayOfWeek = 2;
-  dayOfMonth = 25;
+  second = 00;
+  minute = 10;
+  hour = 15;
+  dayOfWeek = 4;
+  dayOfMonth = 27;
   month = 10;
   year = 11;
-  setDateDs1307(second, minute, hour, dayOfWeek, dayOfMonth, month, year);
+  // do not constantly reset the clock. With a CR2032 it should have plenty of power
+  //setDateDs1307(second, minute, hour, dayOfWeek, dayOfMonth, month, year);
 }
  
 void loop()
 {
-
   byte dht22_dat[5];
   byte dht22_in;
   byte i;
@@ -185,24 +165,10 @@ void loop()
   int lightSensorValue = analogRead(1);
   float Rsensor;
   Rsensor=(float)(1023-lightSensorValue)*10/lightSensorValue;
-  if(Rsensor > 10.0){
-    pinMode(A5,OUTPUT);
-    digitalWrite(A5,HIGH);
-  }
-  else {
-    pinMode(A5,OUTPUT);
-    digitalWrite(A5,LOW);
-  }
   humdity=((float)(dht22_dat[0]*256+dht22_dat[1]))/10;
   temperature=((float)(dht22_dat[2]*256+dht22_dat[3]))/10;
-  if (temperature > 28.0){
-    digitalWrite(A4,HIGH);
-  }
-  else{
-    digitalWrite(A4,LOW);
-  }
   
-    byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
+  byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
 
   getDateDs1307(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
   Serial.print(year,DEC);
@@ -223,8 +189,16 @@ void loop()
   Serial.print("C ");
   Serial.print("light = ");
   Serial.print(Rsensor,1);
-  Serial.println("");
-
+  Serial.print(" c0 = ");
+  Serial.print(counter_0);
+  Serial.print(" c1 = ");
+  Serial.print(counter_1);
+  Serial.print(" c2 = ");
+  Serial.println(counter_2);
   delay(2000);
 }
-@
+
+void count0(void){
+  counter_0++;
+}
+
