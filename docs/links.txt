@@ -1,1 +1,7 @@
 http://www.compuphase.com/mp3/h0420_timecode.htm
+
+http://forums.trossenrobotics.com/tutorials/how-to-diy-128/an-introduction-to-interrupts-3248/
+An easy to understand tutorial on interrupt programming on the Arduino. The last section exlains
+that Arduinos typically have only access to two external interrupt pins (D2 and D3) but that it
+is possible to handle external interrupts on any pin using avrlibc and the appropriate specs for
+the microcontroller.
