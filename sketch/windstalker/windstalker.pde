@@ -3,9 +3,21 @@
 #define DHT22_PIN 0      // ADC0
 #define DS1307_I2C_ADDRESS 0x68
 
-volatile long counter_0 = 0;
-volatile long counter_1 = 0;
-volatile long counter_2 = 0;
+#define WMILL0_PIN 5
+#define WMILL1_PIN 6
+#define WMILL2_PIN 7
+
+#define WMILL0_INT PCINT21
+#define WMILL1_INT PCINT22
+#define WMILL2_INT PCINT23
+
+#define WMILL_INTERRUPT_PIN PIND
+
+/** Set these up as volatile as they are changed by interrupts **/
+volatile uint16_t counter0 = 0;
+volatile uint16_t counter1 = 0;
+volatile uint16_t counter2 = 0;
+
 
 // Convert normal decimal numbers to binary coded decimal
 byte decToBcd(byte val)
@@ -97,8 +109,23 @@ void getDateDs1307(byte *second,
 
 void setup()
 {
-  pinMode(PD2,INPUT);
-  attachInterrupt(0,count0,RISING);
+  // Set the interrupt pins to input
+  pinMode(WMILL0_PIN,INPUT);
+  pinMode(WMILL1_PIN,INPUT);
+  pinMode(WMILL2_PIN,INPUT);
+  // enable pullups on interrupt pins
+  digitalWrite(WMILL0_PIN,HIGH);
+  digitalWrite(WMILL1_PIN,HIGH);
+  digitalWrite(WMILL2_PIN,HIGH);
+  
+  PCICR |= (1<<PCIE2);
+  PCMSK2 |= (1<<WMILL0_INT);
+  PCMSK2 |= (1<<WMILL1_INT);
+  PCMSK2 |= (1<<WMILL2_INT);  
+  
+  interrupts();
+  
+  
   byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
   Wire.begin();
   DDRC |= _BV(DHT22_PIN);
@@ -190,15 +217,56 @@ void loop()
   Serial.print("light = ");
   Serial.print(Rsensor,1);
   Serial.print(" c0 = ");
-  Serial.print(counter_0);
+  Serial.print(counter0);
   Serial.print(" c1 = ");
-  Serial.print(counter_1);
+  Serial.print(counter1);
   Serial.print(" c2 = ");
-  Serial.println(counter_2);
+  Serial.println(counter2);
+  counter0 = counter1 = counter2 = 0;
   delay(2000);
 }
 
-void count0(void){
-  counter_0++;
+ISR(PCINT2_vect){
+  // Here we need to check all the pins on the register to find out which has been triggered
+    static uint8_t sensor0 = 0;
+    static uint8_t sensor1 = 0;
+    static uint8_t sensor2 = 0;
+
+    if((WMILL_INTERRUPT_PIN & (1<<WMILL0_PIN))) {
+        if(sensor0==0) {
+            // rising edge on sensor0. Do work here
+            counter0++;
+            sensor0 = 1;
+        }
+    } else {
+        if(sensor0==1) {
+            // falling edge on sensor0
+            sensor0 = 0;
+        }
+    }
+
+    if((WMILL_INTERRUPT_PIN & (1<<WMILL1_PIN))) {
+        if(sensor1==0) {
+            counter1++;
+            sensor1 = 1;
+        }
+    } else {
+        if(sensor1==1) {
+            sensor1 = 0;
+        }
+    }
+
+    if((WMILL_INTERRUPT_PIN & (1<<WMILL2_PIN))) {
+        if(sensor2==0) {
+            counter2++;
+            sensor2 = 1;
+        }
+    } else {
+        if(sensor2==1) {
+            sensor2 = 0;
+        }
+    }
+
+
 }
 
